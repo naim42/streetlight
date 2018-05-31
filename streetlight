@@ -1,0 +1,31 @@
+#!/bin/bash
+#
+# streetlight - an attempt at finding every triplet of words (word1, word2, word3) such that
+# `sed word1 <<< word2` outputs "word3"
+# use with -g to generate the script words list
+
+# a list of words
+words_file=words.txt
+
+# a list of words that are valid sandboxed sed scripts
+words_script_file=words_script.txt
+
+generate_words_script() {
+    while read -r word; do
+        [[ $word == s* ]] || continue
+        sed --sandbox "$word" < /dev/null &> /dev/null && printf '%s\n' "$word"
+    done
+} < "$words_file" > "$words_script_file"
+
+if [[ $1 == -g ]]; then
+    shift
+    generate_words_script
+fi
+
+while read -r word_script; do
+    while read -r word_input && read -ru 3 word_output; do
+        if [[ $word_output && $word_output != "$word_input" ]] && grep -qFxe "$word_output" "$words_file"; then
+            printf 'sed %s <<< %s => %s\n' "$word_script" "$word_input" "$word_output"
+        fi
+    done < "$words_file" 3< <(sed --sandbox "$word_script" "$words_file")
+done < "$words_script_file"
