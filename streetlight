@@ -2,7 +2,6 @@
 #
 # streetlight - an attempt at finding every triplet of words (word1, word2, word3) such that
 # `sed word1 <<< word2` outputs "word3"
-# use with -g to generate the script words list
 
 # a list of words
 words_file=words.txt
@@ -17,10 +16,7 @@ generate_words_script() {
     done
 } < "$words_file" > "$words_script_file"
 
-if [[ $1 == -g ]]; then
-    shift
-    generate_words_script
-fi
+[[ -f $words_script_file && $(< "$words_script_file") ]] || generate_words_script
 
 while read -r word_script; do
     while read -r word_input && read -ru 3 word_output; do
